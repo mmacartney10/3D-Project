@@ -1,0 +1,15 @@
+{
+  "name": "mattmacartney",
+  "version": "1.0.0",
+  "description": "",
+  "main": "website.js",
+  "scripts": {
+    "start": "node website.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matt Macartney",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.4"
+  }
+}
