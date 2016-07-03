@@ -29,7 +29,7 @@
   }
 
   function createLight () {
-    light = new THREE.PointLight(0xF2DE2E, 1, 80);
+    light = new THREE.PointLight(0xffffff, 1, 80);
     light.position.set(4, 4, 6);
     scene.add(light);
   }
