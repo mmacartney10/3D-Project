@@ -9,6 +9,13 @@
   var material;
   var cube;
 
+  var guiControls;
+  // var guiControls = new function () {
+  //   this.rotationX = 0.01;
+  //   this.rotationY = 0.01;
+  //   this.rotationZ = 0.01;
+  // }();
+
   function init () {
     createScene();
     renderScene();
@@ -19,8 +26,10 @@
     // createLight();
     createSpotLight();
 
+    createGUIControls();
+
     render();
-    // animate();
+    animate();
   }
 
   function createScene () {
@@ -58,7 +67,6 @@
 
   function createCube () {
     cubeGeometry = new THREE.BoxGeometry( 5, 5, 5 );
-    // cubeMaterial = new THREE.MeshLambertMaterial({color: 0xfff000});
     cubeMaterial = new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture('images/logo.jpg') });
     cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
 
@@ -81,6 +89,20 @@
     scene.add(plane);
   }
 
+  function createGUIControls () {
+
+    guiControls = new function () {
+      this.rotationX = 0.01;
+      this.rotationY = 0.01;
+      this.rotationZ = 0.01;
+    }();
+
+    var gui = new dat.GUI();
+    gui.add(guiControls, 'rotationX', 0, 1);
+    gui.add(guiControls, 'rotationY', 0, 1);
+    gui.add(guiControls, 'rotationZ', 0, 1);
+  }
+
   function render() {
     camera.position.x = 20;
     camera.position.y = 20;
@@ -94,8 +116,9 @@
 
   function animate() {
     requestAnimationFrame(animate);
-    cube.rotation.x += 0.005;
-    cube.rotation.y += 0.01;
+    cube.rotation.x += guiControls.rotationX;
+    cube.rotation.y += guiControls.rotationY;
+    cube.rotation.z += guiControls.rotationZ;
     renderer.render(scene, camera);
   }
 
