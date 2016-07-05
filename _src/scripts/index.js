@@ -3,6 +3,7 @@
   var scene;
   var camera;
   var renderer;
+  var controls;
   var light;
   var spotLight;
   var geometry;
@@ -10,18 +11,18 @@
   var cube;
 
   var guiControls;
-  // var guiControls = new function () {
-  //   this.rotationX = 0.01;
-  //   this.rotationY = 0.01;
-  //   this.rotationZ = 0.01;
-  // }();
+
+  var boxSize = 5;
+  var planeSize = 30;
 
   function init () {
     createScene();
     renderScene();
 
     createCube();
-    createPlane();
+
+    createPlane(true);
+    // createPlane(false);
 
     // createLight();
     createSpotLight();
@@ -29,13 +30,23 @@
     createGUIControls();
 
     render();
-    animate();
+    // animate();
+    document.onkeydown = checkKey;
   }
 
   function createScene () {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer();
+
+    // var controls = new THREE.OrbitControls(camera, renderer.domElement);
+    // controls.addEventListener('change', render);
+
+    // controls = new THREE.OrbitControls( camera, renderer.domElement );
+    // controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
+    // controls.enableDamping = true;
+    // controls.dampingFactor = 0.25;
+    // controls.enableZoom = false;
 
     var axis = new THREE.AxisHelper(10);
     scene.add(axis);
@@ -66,7 +77,7 @@
   }
 
   function createCube () {
-    cubeGeometry = new THREE.BoxGeometry( 5, 5, 5 );
+    cubeGeometry = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
     cubeMaterial = new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture('images/logo.jpg') });
     cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
 
@@ -78,12 +89,20 @@
     scene.add(cube);
   }
 
-  function createPlane () {
-    var planeGeometry = new THREE.PlaneGeometry(30, 30, 30);
-    var planeMaterial = new THREE.MeshLambertMaterial({color: 0x0E7C28});
-    var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+  var plane;
 
-    plane.rotation.x = -0.5 * Math.PI;
+  function createPlane (rotate) {
+    var planeGeometry = new THREE.PlaneGeometry(planeSize, planeSize, planeSize);
+    var planeMaterial = new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture('images/grass.jpg') });
+    plane = new THREE.Mesh(planeGeometry, planeMaterial);
+
+    // if (rotate) {
+      plane.rotation.x = -0.5 * Math.PI;
+    // } else {
+      // plane.position.y = 15;
+      // plane.position.z = -15;
+    // }
+
     plane.receiveShadow = true;
 
     scene.add(plane);
@@ -111,6 +130,7 @@
     camera.lookAt(scene.position);
 
   	requestAnimationFrame(render);
+    // controls.update();
   	renderer.render(scene, camera);
   }
 
@@ -119,8 +139,63 @@
     cube.rotation.x += guiControls.rotationX;
     cube.rotation.y += guiControls.rotationY;
     cube.rotation.z += guiControls.rotationZ;
+    controls.update();
     renderer.render(scene, camera);
   }
+
+  function checkKey(e) {
+
+    e = e || window.event;
+
+    var left = 37;
+    var up = 38;
+    var right = 39;
+    var down = 40;
+
+    switch (e.keyCode) {
+      case left:
+        if (hasNotColided(cube.position.x, true)) {
+          cube.position.x -= 1;
+        }
+
+        break;
+      case up:
+        if (hasNotColided(cube.position.z, true)) {
+          cube.position.z -= 1;
+        }
+
+        break;
+      case right:
+        if (hasNotColided(cube.position.x, false)) {
+          cube.position.x += 1;
+        }
+
+        break;
+      case down:
+        if (hasNotColided(cube.position.z, false)) {
+          cube.position.z += 1;
+        }
+
+        break;
+    }
+
+    function hasNotColided (position, isNegative) {
+      var axisPostion = position;
+      var planeEdge = planeSize / 2;
+      var halfBoxSize = boxSize / 2;
+
+      if (isNegative) {
+        axisPostion -= halfBoxSize;
+        planeEdge *= -1;
+        if (axisPostion > planeEdge) return true;
+      } else {
+        axisPostion += halfBoxSize;
+        if (axisPostion < planeEdge) return true;
+      }
+
+      return false;
+    }
+}
 
   init();
 
