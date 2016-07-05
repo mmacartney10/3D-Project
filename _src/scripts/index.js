@@ -3,14 +3,10 @@
   var scene;
   var camera;
   var renderer;
-  var controls;
-  var light;
   var spotLight;
   var geometry;
   var material;
   var cube;
-
-  var guiControls;
 
   var boxSize = 5;
   var planeSize = 30;
@@ -20,33 +16,19 @@
     renderScene();
 
     createCube();
-
     createPlane(true);
-    // createPlane(false);
-
-    // createLight();
     createSpotLight();
 
-    createGUIControls();
-
     render();
-    // animate();
+
     document.onkeydown = checkKey;
+    window.addEventListener( 'resize', onWindowResize, false );
   }
 
   function createScene () {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer();
-
-    // var controls = new THREE.OrbitControls(camera, renderer.domElement);
-    // controls.addEventListener('change', render);
-
-    // controls = new THREE.OrbitControls( camera, renderer.domElement );
-    // controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
-    // controls.enableDamping = true;
-    // controls.dampingFactor = 0.25;
-    // controls.enableZoom = false;
 
     var axis = new THREE.AxisHelper(10);
     scene.add(axis);
@@ -62,12 +44,12 @@
     document.body.appendChild(renderer.domElement);
   }
 
-  function createLight () {
-    light = new THREE.PointLight(0xffffff, 1, 80);
-    light.position.set(5, 8, 5);
-    scene.add(light);
+  function onWindowResize(){
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( window.innerWidth, window.innerHeight );
   }
-
+  
   function createSpotLight () {
     spotLight = new THREE.SpotLight(0xFFFFFF);
     spotLight.castShadow = true;
@@ -91,35 +73,15 @@
 
   var plane;
 
-  function createPlane (rotate) {
+  function createPlane () {
     var planeGeometry = new THREE.PlaneGeometry(planeSize, planeSize, planeSize);
     var planeMaterial = new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture('images/grass.jpg') });
     plane = new THREE.Mesh(planeGeometry, planeMaterial);
 
-    // if (rotate) {
-      plane.rotation.x = -0.5 * Math.PI;
-    // } else {
-      // plane.position.y = 15;
-      // plane.position.z = -15;
-    // }
-
+    plane.rotation.x = -0.5 * Math.PI;
     plane.receiveShadow = true;
 
     scene.add(plane);
-  }
-
-  function createGUIControls () {
-
-    guiControls = new function () {
-      this.rotationX = 0.01;
-      this.rotationY = 0.01;
-      this.rotationZ = 0.01;
-    }();
-
-    var gui = new dat.GUI();
-    gui.add(guiControls, 'rotationX', 0, 1);
-    gui.add(guiControls, 'rotationY', 0, 1);
-    gui.add(guiControls, 'rotationZ', 0, 1);
   }
 
   function render() {
@@ -130,17 +92,7 @@
     camera.lookAt(scene.position);
 
   	requestAnimationFrame(render);
-    // controls.update();
   	renderer.render(scene, camera);
-  }
-
-  function animate() {
-    requestAnimationFrame(animate);
-    cube.rotation.x += guiControls.rotationX;
-    cube.rotation.y += guiControls.rotationY;
-    cube.rotation.z += guiControls.rotationZ;
-    controls.update();
-    renderer.render(scene, camera);
   }
 
   function checkKey(e) {
@@ -151,31 +103,28 @@
     var up = 38;
     var right = 39;
     var down = 40;
+    var incrementValue = 1;
 
     switch (e.keyCode) {
       case left:
         if (hasNotColided(cube.position.x, true)) {
-          cube.position.x -= 1;
+          cube.position.x -= incrementValue;
         }
-
         break;
       case up:
         if (hasNotColided(cube.position.z, true)) {
-          cube.position.z -= 1;
+          cube.position.z -= incrementValue;
         }
-
         break;
       case right:
         if (hasNotColided(cube.position.x, false)) {
-          cube.position.x += 1;
+          cube.position.x += incrementValue;
         }
-
         break;
       case down:
         if (hasNotColided(cube.position.z, false)) {
-          cube.position.z += 1;
+          cube.position.z += incrementValue;
         }
-
         break;
     }
 
@@ -200,3 +149,37 @@
   init();
 
 }());
+
+// var controls;
+// var light;
+// var guiControls;
+// function createLight () {
+//   light = new THREE.PointLight(0xffffff, 1, 80);
+//   light.position.set(5, 8, 5);
+//   scene.add(light);
+// }
+// var controls = new THREE.OrbitControls(camera, renderer.domElement);
+// controls.addEventListener('change', render);
+// controls = new THREE.OrbitControls( camera, renderer.domElement );
+// controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
+// controls.enableDamping = true;
+// controls.dampingFactor = 0.25;
+// controls.enableZoom = false;
+// function createGUIControls () {
+//   guiControls = new function () {
+//     this.rotationX = 0.01;
+//     this.rotationY = 0.01;
+//     this.rotationZ = 0.01;
+//   }();
+//   var gui = new dat.GUI();
+//   gui.add(guiControls, 'rotationX', 0, 1);
+//   gui.add(guiControls, 'rotationY', 0, 1);
+//   gui.add(guiControls, 'rotationZ', 0, 1);
+// }
+// function animate() {
+//   requestAnimationFrame(animate);
+//   cube.rotation.x += guiControls.rotationX;
+//   cube.rotation.y += guiControls.rotationY;
+//   cube.rotation.z += guiControls.rotationZ;
+//   renderer.render(scene, camera);
+// }
