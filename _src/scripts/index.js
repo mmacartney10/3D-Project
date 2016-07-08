@@ -6,7 +6,14 @@
   var spotLight;
   var geometry;
   var material;
+
   var cube;
+  var cubeGeometry;
+  var cubeMaterial;
+
+  var enemy;
+  var enemyGeometry;
+  var enemyMaterial;
 
   var boxSize = 5;
   var planeSize = 30;
@@ -16,7 +23,9 @@
     renderScene();
 
     createCube();
+    createEnemy();
     createPlane(true);
+    // createLine();
     createSpotLight();
 
     render();
@@ -49,7 +58,7 @@
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
   }
-  
+
   function createSpotLight () {
     spotLight = new THREE.SpotLight(0xFFFFFF);
     spotLight.castShadow = true;
@@ -63,12 +72,46 @@
     cubeMaterial = new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture('images/logo.jpg') });
     cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
 
-    cube.position.x = 2.5;
+    // var edges = new THREE.EdgesHelper( cube, 0x00ff00 );
+    var edges = new THREE.WireframeHelper( cube, 0x00ff00 );
+
+
+    cube.position.x = 0;
     cube.position.y = 2.5;
-    cube.position.z = 2.5;
+    cube.position.z = 10;
     cube.castShadow = true;
 
     scene.add(cube);
+    scene.add(edges);
+  }
+
+  function createEnemy () {
+    enemyGeometry = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
+    enemyMaterial = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
+    enemy = new THREE.Mesh(enemyGeometry, enemyMaterial);
+
+    enemy.position.x = 0;
+    enemy.position.y = 2.5;
+    enemy.position.z = 0;
+    enemy.castShadow = true;
+
+    scene.add(enemy);
+
+    // animateEnemy();
+  }
+
+  var line;
+  var lineGeometry;
+  var lineMaterial;
+
+  function createLine () {
+    lineMaterial = new THREE.LineBasicMaterial({color: 0xFF00F0});
+    lineGeometry = new THREE.Geometry();
+    lineGeometry.vertices.push(new THREE.Vector3(-15, 5, 0));
+    lineGeometry.vertices.push(new THREE.Vector3(15, 5, 0));
+
+    line = new THREE.Line(lineGeometry, lineMaterial);
+    scene.add(line);
   }
 
   var plane;
@@ -95,6 +138,11 @@
   	renderer.render(scene, camera);
   }
 
+  var moveLeftDisabled = false;
+  var moveUpDisabled = false;
+  var moveRightDisabled = false;
+  var moveDownDisabled = false;
+
   function checkKey(e) {
 
     e = e || window.event;
@@ -103,32 +151,32 @@
     var up = 38;
     var right = 39;
     var down = 40;
-    var incrementValue = 1;
+    var incrementValue = 0.5;
 
     switch (e.keyCode) {
       case left:
-        if (hasNotColided(cube.position.x, true)) {
-          cube.position.x -= incrementValue;
-        }
+        if (hasColidedWithEdge(cube.position.x, true)) return;
+        if (moveLeftDisabled === false || moveUpDisabled || moveRightDisabled || moveDownDisabled) cube.position.x -= incrementValue;
+        if (!moveUpDisabled && !moveRightDisabled && !moveDownDisabled) moveLeftDisabled = cubeCollitionWithEnemy();
         break;
       case up:
-        if (hasNotColided(cube.position.z, true)) {
-          cube.position.z -= incrementValue;
-        }
+        if (hasColidedWithEdge(cube.position.z, true)) return;
+        if (moveUpDisabled === false || moveLeftDisabled || moveRightDisabled || moveDownDisabled) cube.position.z -= incrementValue;
+        if (!moveLeftDisabled && !moveRightDisabled && !moveDownDisabled) moveUpDisabled = cubeCollitionWithEnemy();
         break;
       case right:
-        if (hasNotColided(cube.position.x, false)) {
-          cube.position.x += incrementValue;
-        }
+        if (hasColidedWithEdge(cube.position.x, false)) return;
+        if (moveRightDisabled === false || moveLeftDisabled || moveUpDisabled || moveDownDisabled) cube.position.x += incrementValue;
+        if (!moveLeftDisabled && !moveUpDisabled && !moveDownDisabled) moveRightDisabled = cubeCollitionWithEnemy();
         break;
       case down:
-        if (hasNotColided(cube.position.z, false)) {
-          cube.position.z += incrementValue;
-        }
+        if (hasColidedWithEdge(cube.position.z, false)) return;
+        if (moveDownDisabled === false || moveLeftDisabled || moveUpDisabled || moveRightDisabled) cube.position.z += incrementValue;
+        if (!moveLeftDisabled && !moveUpDisabled && !moveRightDisabled) moveDownDisabled = cubeCollitionWithEnemy();
         break;
     }
 
-    function hasNotColided (position, isNegative) {
+    function hasColidedWithEdge (position, isNegative) {
       var axisPostion = position;
       var planeEdge = planeSize / 2;
       var halfBoxSize = boxSize / 2;
@@ -136,50 +184,30 @@
       if (isNegative) {
         axisPostion -= halfBoxSize;
         planeEdge *= -1;
-        if (axisPostion > planeEdge) return true;
+        if (axisPostion > planeEdge) return false;
       } else {
         axisPostion += halfBoxSize;
-        if (axisPostion < planeEdge) return true;
+        if (axisPostion < planeEdge) return false;
       }
 
-      return false;
+      return true;
+    }
+
+    function cubeCollitionWithEnemy () {
+      var cubeMaxX = cube.position.x + 2.5;
+      var cubeMinX = cube.position.x - 2.5;
+      var cubeMaxZ = cube.position.z + 2.5;
+      var cubeMinZ = cube.position.z - 2.5;
+
+      var enemyMaxX = enemy.position.x + 2.5;
+      var enemyMinX = enemy.position.x - 2.5;
+      var enemyMaxZ = enemy.position.z + 2.5;
+      var enemyMinZ = enemy.position.z - 2.5;
+
+      return (enemyMinX <= cubeMaxX && enemyMaxX >= cubeMinX) && (enemyMinZ <= cubeMaxZ && enemyMaxZ >= cubeMinZ);
     }
 }
 
   init();
 
 }());
-
-// var controls;
-// var light;
-// var guiControls;
-// function createLight () {
-//   light = new THREE.PointLight(0xffffff, 1, 80);
-//   light.position.set(5, 8, 5);
-//   scene.add(light);
-// }
-// var controls = new THREE.OrbitControls(camera, renderer.domElement);
-// controls.addEventListener('change', render);
-// controls = new THREE.OrbitControls( camera, renderer.domElement );
-// controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
-// controls.enableDamping = true;
-// controls.dampingFactor = 0.25;
-// controls.enableZoom = false;
-// function createGUIControls () {
-//   guiControls = new function () {
-//     this.rotationX = 0.01;
-//     this.rotationY = 0.01;
-//     this.rotationZ = 0.01;
-//   }();
-//   var gui = new dat.GUI();
-//   gui.add(guiControls, 'rotationX', 0, 1);
-//   gui.add(guiControls, 'rotationY', 0, 1);
-//   gui.add(guiControls, 'rotationZ', 0, 1);
-// }
-// function animate() {
-//   requestAnimationFrame(animate);
-//   cube.rotation.x += guiControls.rotationX;
-//   cube.rotation.y += guiControls.rotationY;
-//   cube.rotation.z += guiControls.rotationZ;
-//   renderer.render(scene, camera);
-// }
