@@ -4,12 +4,13 @@
   "description": "",
   "main": "website.js",
   "scripts": {
-    "start": "node website.js",
+    "start": "webpack & node website.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Matt Macartney",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.13.4"
+    "express": "^4.13.4",
+    "webpack": "^1.13.1"
   }
 }

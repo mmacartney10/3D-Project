@@ -8,6 +8,7 @@ website.get('/', function (req, res) {
 });
 
 website.use(express.static('_src'));
+website.use(express.static('app'));
 
 http.listen(7000, function () {
   console.log('Listening on port 7000');

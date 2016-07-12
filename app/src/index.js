@@ -7,6 +7,10 @@
   var geometry;
   var material;
 
+  var plane;
+  var planeGeometry;
+  var planeMaterial;
+
   var cube;
   var cubeGeometry;
   var cubeMaterial;
@@ -15,8 +19,13 @@
   var enemyGeometry;
   var enemyMaterial;
 
+  var gridSize = 50;
   var boxSize = 5;
   var planeSize = 30;
+
+  var colourWhite = 0xFFFFFF;
+  var colourGreen = 0x00ff00;
+  var colourRed = 0xFF0000;
 
   function init () {
     createScene();
@@ -25,13 +34,12 @@
     createCube();
     createEnemy();
     createPlane(true);
-    // createLine();
     createSpotLight();
 
     render();
 
     document.onkeydown = checkKey;
-    window.addEventListener( 'resize', onWindowResize, false );
+    window.addEventListener('resize', onWindowResize, false);
   }
 
   function createScene () {
@@ -39,10 +47,10 @@
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer();
 
-    var axis = new THREE.AxisHelper(10);
+    var axis = new THREE.AxisHelper(gridSize);
     scene.add(axis);
 
-    var grid = new THREE.GridHelper(50, 5, 0xFFFFFF);
+    var grid = new THREE.GridHelper(gridSize, boxSize, colourWhite);
     scene.add(grid);
   }
 
@@ -56,25 +64,21 @@
   function onWindowResize(){
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
   function createSpotLight () {
-    spotLight = new THREE.SpotLight(0xFFFFFF);
+    spotLight = new THREE.SpotLight(colourWhite);
     spotLight.castShadow = true;
     spotLight.position.set(15, 30, 50);
-
     scene.add(spotLight);
   }
 
   function createCube () {
     cubeGeometry = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
-    cubeMaterial = new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture('images/logo.jpg') });
+    cubeMaterial = new THREE.MeshLambertMaterial({map: THREE.ImageUtils.loadTexture('images/logo.jpg')});
     cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-
-    // var edges = new THREE.EdgesHelper( cube, 0x00ff00 );
-    var edges = new THREE.WireframeHelper( cube, 0x00ff00 );
-
+    var edges = new THREE.WireframeHelper(cube, colourGreen);
 
     cube.position.x = 0;
     cube.position.y = 2.5;
@@ -87,38 +91,20 @@
 
   function createEnemy () {
     enemyGeometry = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
-    enemyMaterial = new THREE.MeshLambertMaterial({ color: 0xFF0000 });
+    enemyMaterial = new THREE.MeshLambertMaterial({color: colourRed});
     enemy = new THREE.Mesh(enemyGeometry, enemyMaterial);
 
     enemy.position.x = 0;
-    enemy.position.y = 2.5;
+    enemy.position.y = boxSize / 2;
     enemy.position.z = 0;
     enemy.castShadow = true;
 
     scene.add(enemy);
-
-    // animateEnemy();
   }
-
-  var line;
-  var lineGeometry;
-  var lineMaterial;
-
-  function createLine () {
-    lineMaterial = new THREE.LineBasicMaterial({color: 0xFF00F0});
-    lineGeometry = new THREE.Geometry();
-    lineGeometry.vertices.push(new THREE.Vector3(-15, 5, 0));
-    lineGeometry.vertices.push(new THREE.Vector3(15, 5, 0));
-
-    line = new THREE.Line(lineGeometry, lineMaterial);
-    scene.add(line);
-  }
-
-  var plane;
 
   function createPlane () {
-    var planeGeometry = new THREE.PlaneGeometry(planeSize, planeSize, planeSize);
-    var planeMaterial = new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture('images/grass.jpg') });
+    planeGeometry = new THREE.PlaneGeometry(planeSize, planeSize, planeSize);
+    planeMaterial = new THREE.MeshLambertMaterial({map: THREE.ImageUtils.loadTexture('images/grass.jpg')});
     plane = new THREE.Mesh(planeGeometry, planeMaterial);
 
     plane.rotation.x = -0.5 * Math.PI;
@@ -156,57 +142,61 @@
     switch (e.keyCode) {
       case left:
         if (hasColidedWithEdge(cube.position.x, true)) return;
-        if (moveLeftDisabled === false || moveUpDisabled || moveRightDisabled || moveDownDisabled) cube.position.x -= incrementValue;
+        if (moveLeftDisabled === false) cube.position.x -= incrementValue;
+
         if (!moveUpDisabled && !moveRightDisabled && !moveDownDisabled) moveLeftDisabled = cubeCollitionWithEnemy();
         break;
       case up:
         if (hasColidedWithEdge(cube.position.z, true)) return;
-        if (moveUpDisabled === false || moveLeftDisabled || moveRightDisabled || moveDownDisabled) cube.position.z -= incrementValue;
+        if (moveUpDisabled === false) cube.position.z -= incrementValue;
+
         if (!moveLeftDisabled && !moveRightDisabled && !moveDownDisabled) moveUpDisabled = cubeCollitionWithEnemy();
         break;
       case right:
         if (hasColidedWithEdge(cube.position.x, false)) return;
-        if (moveRightDisabled === false || moveLeftDisabled || moveUpDisabled || moveDownDisabled) cube.position.x += incrementValue;
+        if (moveRightDisabled === false) cube.position.x += incrementValue;
+
         if (!moveLeftDisabled && !moveUpDisabled && !moveDownDisabled) moveRightDisabled = cubeCollitionWithEnemy();
         break;
       case down:
         if (hasColidedWithEdge(cube.position.z, false)) return;
-        if (moveDownDisabled === false || moveLeftDisabled || moveUpDisabled || moveRightDisabled) cube.position.z += incrementValue;
+        if (moveDownDisabled === false) cube.position.z += incrementValue;
+
         if (!moveLeftDisabled && !moveUpDisabled && !moveRightDisabled) moveDownDisabled = cubeCollitionWithEnemy();
         break;
     }
+  }
 
-    function hasColidedWithEdge (position, isNegative) {
-      var axisPostion = position;
-      var planeEdge = planeSize / 2;
-      var halfBoxSize = boxSize / 2;
+  function hasColidedWithEdge (position, isDirectionNegative) {
+    var axisPostion = position;
+    var planeEdge = planeSize / 2;
+    var halfBoxSize = boxSize / 2;
 
-      if (isNegative) {
-        axisPostion -= halfBoxSize;
-        planeEdge *= -1;
-        if (axisPostion > planeEdge) return false;
-      } else {
-        axisPostion += halfBoxSize;
-        if (axisPostion < planeEdge) return false;
-      }
-
-      return true;
+    if (isDirectionNegative) {
+      axisPostion -= halfBoxSize;
+      planeEdge *= -1;
+      if (axisPostion > planeEdge) return false;
+    } else {
+      axisPostion += halfBoxSize;
+      if (axisPostion < planeEdge) return false;
     }
 
-    function cubeCollitionWithEnemy () {
-      var cubeMaxX = cube.position.x + 2.5;
-      var cubeMinX = cube.position.x - 2.5;
-      var cubeMaxZ = cube.position.z + 2.5;
-      var cubeMinZ = cube.position.z - 2.5;
+    return true;
+  }
 
-      var enemyMaxX = enemy.position.x + 2.5;
-      var enemyMinX = enemy.position.x - 2.5;
-      var enemyMaxZ = enemy.position.z + 2.5;
-      var enemyMinZ = enemy.position.z - 2.5;
+  function cubeCollitionWithEnemy () {
+    var cubeMaxX = cube.position.x + 2.5;
+    var cubeMinX = cube.position.x - 2.5;
+    var cubeMaxZ = cube.position.z + 2.5;
+    var cubeMinZ = cube.position.z - 2.5;
 
-      return (enemyMinX <= cubeMaxX && enemyMaxX >= cubeMinX) && (enemyMinZ <= cubeMaxZ && enemyMaxZ >= cubeMinZ);
-    }
-}
+    var enemyMaxX = enemy.position.x + 2.5;
+    var enemyMinX = enemy.position.x - 2.5;
+    var enemyMaxZ = enemy.position.z + 2.5;
+    var enemyMinZ = enemy.position.z - 2.5;
+
+    return (enemyMinX <= cubeMaxX && enemyMaxX >= cubeMinX) && (enemyMinZ <= cubeMaxZ && enemyMaxZ >= cubeMinZ);
+  }
 
   init();
 
